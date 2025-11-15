@@ -96,72 +96,114 @@ async function fetchAPI(endpoint) {
 function displayPrice(data) {
     if (data.error) return;
     
-    const changePercentValue = data.change_percent || 0;
-    const isPositive = changePercentValue >= 0;
+    // ✅ แก้ไข: ใช้ชื่อ field ที่ตรงกับ Backend
+    const currentPrice = data.current || 0;
+    const changeValue = data.change || 0;
+    const changePercent = data.percent || 0;
+    const isPositive = changePercent >= 0;
     
-    document.getElementById('companyName').textContent = 'Stock Analysis';
     document.getElementById('symbolDisplay').textContent = data.symbol;
-    document.getElementById('currentPrice').textContent = `$${data.current_price?.toFixed(2) || '0.00'}`;
-    document.getElementById('changeValue').textContent = `${isPositive ? '+' : ''}${data.change?.toFixed(2) || '0.00'}`;
-    document.getElementById('changePercent').textContent = `(${isPositive ? '+' : ''}${changePercentValue.toFixed(2)}%)`;
+    document.getElementById('currentPrice').textContent = `$${currentPrice.toFixed(2)}`;
+    document.getElementById('changeValue').textContent = `${isPositive ? '+' : ''}${changeValue.toFixed(2)}`;
+    document.getElementById('changePercent').textContent = `(${isPositive ? '+' : ''}${changePercent.toFixed(2)}%)`;
     
     const priceChange = document.getElementById('priceChange');
     priceChange.classList.remove('positive', 'negative');
     priceChange.classList.add(isPositive ? 'positive' : 'negative');
     
-    document.getElementById('openPrice').textContent = `$${data.open?.toFixed(2) || 'N/A'}`;
-    document.getElementById('highPrice').textContent = `$${data.high?.toFixed(2) || 'N/A'}`;
-    document.getElementById('lowPrice').textContent = `$${data.low?.toFixed(2) || 'N/A'}`;
+    document.getElementById('openPrice').textContent = `$${(data.open || 0).toFixed(2)}`;
+    document.getElementById('highPrice').textContent = `$${(data.high || 0).toFixed(2)}`;
+    document.getElementById('lowPrice').textContent = `$${(data.low || 0).toFixed(2)}`;
 }
 
 function displayOverview(data) {
     if (data.error) return;
     
-    document.getElementById('companyName').textContent = data.company_name || 'N/A';
-    document.getElementById('marketCap').textContent = data.market_cap_formatted || 'N/A';
+    // ✅ แก้ไข: ใช้ชื่อ field ที่ตรงกับ Backend
+    const companyName = data.name || 'N/A';
+    const marketCap = data.market_cap || 0;
+    
+    // Format market cap
+    let marketCapFormatted = 'N/A';
+    if (marketCap > 0) {
+        if (marketCap >= 1000) {
+            marketCapFormatted = `$${(marketCap / 1000).toFixed(2)}T`;
+        } else if (marketCap >= 1) {
+            marketCapFormatted = `$${marketCap.toFixed(2)}B`;
+        } else {
+            marketCapFormatted = `$${(marketCap * 1000).toFixed(2)}M`;
+        }
+    }
+    
+    document.getElementById('companyName').textContent = companyName;
+    document.getElementById('marketCap').textContent = marketCapFormatted;
     document.getElementById('industryValue').textContent = data.industry || 'N/A';
-    document.getElementById('employeesValue').textContent = data.employees ? data.employees.toLocaleString() : 'N/A';
-    document.getElementById('ipoValue').textContent = data.ipo_date || 'N/A';
+    document.getElementById('employeesValue').textContent = 'N/A'; // Finnhub doesn't provide this
+    document.getElementById('ipoValue').textContent = data.ipo || 'N/A';
     
     const websiteLink = document.getElementById('websiteValue');
-    if (data.website && data.website !== 'N/A') {
-        websiteLink.href = data.website;
+    if (data.weburl && data.weburl !== '#') {
+        websiteLink.href = data.weburl;
         websiteLink.textContent = 'Visit Website →';
     } else {
         websiteLink.textContent = 'N/A';
     }
     
-    document.getElementById('descriptionValue').textContent = data.description || 'No description available';
+    // Finnhub doesn't provide description in profile2, show basic info
+    const description = `${companyName} is a ${data.industry || 'company'} listed on ${data.exchange || 'the stock exchange'}.`;
+    document.getElementById('descriptionValue').textContent = description;
 }
 
 function displayFinancials(data) {
     if (data.error) return;
     
-    document.getElementById('revenueGrowth').textContent = `${data.revenue_yoy_growth || 0}%`;
-    document.getElementById('profitMargin').textContent = `${data.profit_margin || 0}%`;
-    document.getElementById('epsValue').textContent = `$${data.eps_ttm || 0}`;
-    document.getElementById('debtEquity').textContent = `${data.debt_to_equity || 0}`;
-    document.getElementById('fcfValue').textContent = data.free_cash_flow || 'N/A';
-    document.getElementById('roeValue').textContent = `${data.roe || 0}%`;
+    // ✅ แก้ไข: ใช้ชื่อ field ที่ตรงกับ Backend
+    const revenueGrowth = data.revenue_growth || 0;
+    const profitMargin = data.profit_margin || 0;
+    const eps = data.eps || 0;
+    const debtEquity = data.debt_equity || 0;
+    const fcf = data.free_cash_flow || 0;
+    const roe = data.roe || 0;
+    
+    // Format values
+    document.getElementById('revenueGrowth').textContent = `${revenueGrowth.toFixed(2)}%`;
+    document.getElementById('profitMargin').textContent = `${profitMargin.toFixed(2)}%`;
+    document.getElementById('epsValue').textContent = `$${eps.toFixed(2)}`;
+    document.getElementById('debtEquity').textContent = debtEquity.toFixed(2);
+    
+    // Format FCF
+    let fcfFormatted = 'N/A';
+    if (fcf !== 0) {
+        if (Math.abs(fcf) >= 1000000000) {
+            fcfFormatted = `$${(fcf / 1000000000).toFixed(2)}B`;
+        } else if (Math.abs(fcf) >= 1000000) {
+            fcfFormatted = `$${(fcf / 1000000).toFixed(2)}M`;
+        } else {
+            fcfFormatted = `$${fcf.toFixed(2)}`;
+        }
+    }
+    document.getElementById('fcfValue').textContent = fcfFormatted;
+    document.getElementById('roeValue').textContent = `${roe.toFixed(2)}%`;
     
     // Valuation Ratios
-    document.getElementById('peRatio').textContent = `${data.pe_ratio || 'N/A'}`;
-    document.getElementById('forwardPe').textContent = `${data.forward_pe || 'N/A'}`;
-    document.getElementById('pegRatio').textContent = `${data.peg_ratio || 'N/A'}`;
-    document.getElementById('psRatio').textContent = `${data.ps_ratio || 'N/A'}`;
-    document.getElementById('pbRatio').textContent = `${data.pb_ratio || 'N/A'}`;
-    document.getElementById('grossMargin').textContent = `${data.gross_margin || 0}%`;
+    document.getElementById('peRatio').textContent = (data.pe_ratio || 0).toFixed(2);
+    document.getElementById('forwardPe').textContent = 'N/A'; // Not available in basic metrics
+    document.getElementById('pegRatio').textContent = (data.peg_ratio || 0).toFixed(2);
+    document.getElementById('psRatio').textContent = (data.ps_ratio || 0).toFixed(2);
+    document.getElementById('pbRatio').textContent = (data.pb_ratio || 0).toFixed(2);
+    document.getElementById('grossMargin').textContent = `${(data.operating_margin || 0).toFixed(2)}%`;
 }
 
 function displayNews(data) {
     const newsContainer = document.getElementById('newsContainer');
     
-    if (data.error || !data.news || data.news.length === 0) {
+    // ✅ แก้ไข: Backend ส่ง 'articles' แทน 'news'
+    if (data.error || !data.articles || data.articles.length === 0) {
         newsContainer.innerHTML = '<p>No news articles available</p>';
         return;
     }
     
-    newsContainer.innerHTML = data.news.map(article => `
+    newsContainer.innerHTML = data.articles.map(article => `
         <div class="news-item" onclick="window.open('${article.url}', '_blank')">
             <div class="news-headline">${article.headline}</div>
             <div class="news-summary">${article.summary}</div>
@@ -174,7 +216,7 @@ function displayNews(data) {
 }
 
 function displayIndicators(data) {
-    if (data.error) {
+    if (data.error || data.rsi === null || data.rsi === undefined) {
         document.getElementById('rsiValue').textContent = 'N/A';
         document.getElementById('rsiSignal').textContent = 'Unable to load';
         document.getElementById('macdValue').textContent = 'N/A';
@@ -182,13 +224,40 @@ function displayIndicators(data) {
         return;
     }
     
+    // ✅ RSI
     const rsi = data.rsi || 50;
     document.getElementById('rsiValue').textContent = rsi.toFixed(2);
-    document.getElementById('rsiSignal').textContent = data.rsi_signal || 'Neutral';
-    document.getElementById('rsiFill').style.width = `${rsi}%`;
     
-    document.getElementById('macdValue').textContent = (data.macd || 0).toFixed(4);
-    document.getElementById('macdSignal').textContent = data.macd_signal || 'Neutral';
+    // Determine RSI signal
+    let rsiSignal = 'Neutral';
+    if (rsi > 70) {
+        rsiSignal = 'Overbought ⚠️';
+    } else if (rsi < 30) {
+        rsiSignal = 'Oversold 📈';
+    }
+    document.getElementById('rsiSignal').textContent = rsiSignal;
+    document.getElementById('rsiFill').style.width = `${Math.min(rsi, 100)}%`;
+    
+    // ✅ MACD
+    if (data.macd && data.macd.macd !== undefined) {
+        const macdValue = data.macd.macd || 0;
+        const macdSignal = data.macd.signal || 0;
+        const macdHist = data.macd.histogram || 0;
+        
+        document.getElementById('macdValue').textContent = macdValue.toFixed(4);
+        
+        // Determine MACD signal
+        let signalText = 'Neutral';
+        if (macdHist > 0) {
+            signalText = 'Bullish 📈';
+        } else if (macdHist < 0) {
+            signalText = 'Bearish 📉';
+        }
+        document.getElementById('macdSignal').textContent = signalText;
+    } else {
+        document.getElementById('macdValue').textContent = 'N/A';
+        document.getElementById('macdSignal').textContent = 'Unable to load';
+    }
 }
 
 function displayRiskFactors(financialsData) {
@@ -202,7 +271,7 @@ function displayRiskFactors(financialsData) {
     
     // Analyze risk factors based on financials
     const peRatio = financialsData.pe_ratio || 0;
-    const debtEquity = financialsData.debt_to_equity || 0;
+    const debtEquity = financialsData.debt_equity || 0;
     const profitMargin = financialsData.profit_margin || 0;
     const roe = financialsData.roe || 0;
     
@@ -210,7 +279,7 @@ function displayRiskFactors(financialsData) {
         risks.push({
             icon: '📈',
             title: 'High Valuation',
-            desc: `P/E ratio of ${peRatio} is above average - stock may be overpriced`
+            desc: `P/E ratio of ${peRatio.toFixed(2)} is above average - stock may be overpriced`
         });
     }
     
@@ -218,7 +287,7 @@ function displayRiskFactors(financialsData) {
         risks.push({
             icon: '💳',
             title: 'High Debt',
-            desc: `Debt-to-Equity ratio of ${debtEquity} indicates higher financial risk`
+            desc: `Debt-to-Equity ratio of ${debtEquity.toFixed(2)} indicates higher financial risk`
         });
     }
     
@@ -226,7 +295,7 @@ function displayRiskFactors(financialsData) {
         risks.push({
             icon: '📉',
             title: 'Low Margins',
-            desc: `Profit margin of ${profitMargin}% is relatively low`
+            desc: `Profit margin of ${profitMargin.toFixed(2)}% is relatively low`
         });
     }
     
@@ -234,7 +303,7 @@ function displayRiskFactors(financialsData) {
         risks.push({
             icon: '⚠️',
             title: 'Weak ROE',
-            desc: `Return on Equity of ${roe}% is below industry average`
+            desc: `Return on Equity of ${roe.toFixed(2)}% is below industry average`
         });
     }
     
@@ -261,7 +330,7 @@ function displayChart(priceData) {
     if (priceData.error) return;
     
     // Generate simulated price history for chart
-    const currentPrice = priceData.current_price || 100;
+    const currentPrice = priceData.current || 100;
     const labels = generateDateLabels(30);
     const priceHistory = generatePriceHistory(currentPrice, 30);
     
