@@ -1,0 +1,22 @@
+version: '3.8'
+
+services:
+  stock-analyzer:
+    build: .
+    container_name: stock-analyzer
+    ports:
+      - "5000:5000"
+    environment:
+      - FLASK_ENV=production
+      - FINNHUB_API_KEY=d46ntu1r01qgc9etnfngd46ntu1r01qgc9etnfo0
+      - ALPHA_VANTAGE_API_KEY=SSHS1YDZEUU1VQM0
+    restart: unless-stopped
+    volumes:
+      - ./templates:/app/templates
+      - ./static:/app/static
+    networks:
+      - stock-analyzer-network
+
+networks:
+  stock-analyzer-network:
+    driver: bridge
