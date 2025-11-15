@@ -76,3 +76,7 @@ async function analyzeSymbol(symbol) {
     showLoading(false);
   }
 }
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>
+
