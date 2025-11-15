@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stock Analyzer - Professional Trading Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <!-- ===== HEADER ===== -->
+    <header class="header">
+        <div class="container">
+            <div class="logo">
+                <h1>📊 Stock Analyzer</h1>
+                <p>Professional Financial Intelligence</p>
+            </div>
+            <div class="search-box">
+                <input type="text" id="symbolInput" placeholder="Search stock symbol (e.g., AAPL, TSLA, MSFT)" autocomplete="off">
+                <button id="searchBtn" onclick="searchStock()">🔍 Analyze</button>
+            </div>
+            <div class="theme-toggle">
+                <button onclick="toggleTheme()">🌙 Dark</button>
+            </div>
+        </div>
+    </header>
+
+    <!-- ===== MAIN CONTAINER ===== -->
+    <main class="container">
+        <!-- Loading Spinner -->
+        <div id="loadingSpinner" class="spinner hidden">
+            <div class="spinner-circle"></div>
+            <p>Loading data...</p>
+        </div>
+
+        <!-- Error Message -->
+        <div id="errorMessage" class="error-box hidden"></div>
+
+        <!-- Content (Hidden initially) -->
+        <div id="mainContent" class="main-content hidden">
+            
+            <!-- ===== PRICE CARD ===== -->
+            <section class="price-card">
+                <div class="price-header">
+                    <div>
+                        <h2 id="companyName">-</h2>
+                        <p id="symbolDisplay" class="symbol-tag">-</p>
+                    </div>
+                    <div class="price-section">
+                        <div class="price-value" id="currentPrice">$0.00</div>
+                        <div class="price-badge" id="priceChange">
+                            <span id="changeValue">+0.00</span> 
+                            <span id="changePercent">(+0.00%)</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="price-details">
+                    <div class="detail-item">
+                        <span>Open</span>
+                        <strong id="openPrice">-</strong>
+                    </div>
+                    <div class="detail-item">
+                        <span>High</span>
+                        <strong id="highPrice">-</strong>
+                    </div>
+                    <div class="detail-item">
+                        <span>Low</span>
+                        <strong id="lowPrice">-</strong>
+                    </div>
+                    <div class="detail-item">
+                        <span>Market Cap</span>
+                        <strong id="marketCap">-</strong>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ===== COMPANY OVERVIEW ===== -->
+            <section class="card">
+                <h3>🏢 Company Overview</h3>
+                <div class="overview-grid">
+                    <div class="overview-item">
+                        <span class="label">Industry</span>
+                        <span class="value" id="industryValue">-</span>
+                    </div>
+                    <div class="overview-item">
+                        <span class="label">Employees</span>
+                        <span class="value" id="employeesValue">-</span>
+                    </div>
+                    <div class="overview-item">
+                        <span class="label">Founded (IPO)</span>
+                        <span class="value" id="ipoValue">-</span>
+                    </div>
+                    <div class="overview-item">
+                        <span class="label">Website</span>
+                        <a id="websiteValue" href="#" target="_blank" class="value">-</a>
+                    </div>
+                </div>
+                <div class="description-box">
+                    <p id="descriptionValue">-</p>
+                </div>
+            </section>
+
+            <!-- ===== PRICE CHART ===== -->
+            <section class="card">
+                <h3>📈 Price Chart</h3>
+                <div class="chart-container">
+                    <canvas id="priceChart"></canvas>
+                </div>
+                <p class="chart-note">*Chart based on recent price history simulation</p>
+            </section>
+
+            <!-- ===== FINANCIAL HEALTH ===== -->
+            <section class="card">
+                <h3>💰 Financial Health</h3>
+                <div class="metrics-grid">
+                    <div class="metric-card">
+                        <div class="metric-label">Revenue YoY Growth</div>
+                        <div class="metric-value" id="revenueGrowth">-</div>
+                        <div class="metric-status positive">↗ Strong</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-label">Profit Margin</div>
+                        <div class="metric-value" id="profitMargin">-</div>
+                        <div class="metric-status positive">↗ Healthy</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-label">EPS (TTM)</div>
+                        <div class="metric-value" id="epsValue">-</div>
+                        <div class="metric-status positive">↗ Positive</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-label">Debt to Equity</div>
+                        <div class="metric-value" id="debtEquity">-</div>
+                        <div class="metric-status neutral">→ Moderate</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-label">Free Cash Flow</div>
+                        <div class="metric-value" id="fcfValue">-</div>
+                        <div class="metric-status positive">↗ Strong</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-label">ROE</div>
+                        <div class="metric-value" id="roeValue">-</div>
+                        <div class="metric-status positive">↗ Excellent</div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ===== VALUATION RATIOS ===== -->
+            <section class="card">
+                <h3>📊 Valuation Ratios</h3>
+                <div class="ratios-grid">
+                    <div class="ratio-item">
+                        <span class="ratio-label">P/E Ratio</span>
+                        <span class="ratio-value" id="peRatio">-</span>
+                        <span class="ratio-desc">Lower is better</span>
+                    </div>
+                    <div class="ratio-item">
+                        <span class="ratio-label">Forward P/E</span>
+                        <span class="ratio-value" id="forwardPe">-</span>
+                        <span class="ratio-desc">Future expectation</span>
+                    </div>
+                    <div class="ratio-item">
+                        <span class="ratio-label">PEG Ratio</span>
+                        <span class="ratio-value" id="pegRatio">-</span>
+                        <span class="ratio-desc">Growth adjusted</span>
+                    </div>
+                    <div class="ratio-item">
+                        <span class="ratio-label">P/S Ratio</span>
+                        <span class="ratio-value" id="psRatio">-</span>
+                        <span class="ratio-desc">Price to Sales</span>
+                    </div>
+                    <div class="ratio-item">
+                        <span class="ratio-label">P/B Ratio</span>
+                        <span class="ratio-value" id="pbRatio">-</span>
+                        <span class="ratio-desc">Price to Book</span>
+                    </div>
+                    <div class="ratio-item">
+                        <span class="ratio-label">Gross Margin</span>
+                        <span class="ratio-value" id="grossMargin">-</span>
+                        <span class="ratio-desc">Operational efficiency</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ===== TECHNICAL INDICATORS ===== -->
+            <section class="card">
+                <h3>📉 Technical Indicators</h3>
+                <div class="indicators-grid">
+                    <div class="indicator-card">
+                        <div class="indicator-label">RSI (14)</div>
+                        <div class="indicator-value" id="rsiValue">-</div>
+                        <div class="indicator-signal" id="rsiSignal">-</div>
+                        <div class="indicator-bar">
+                            <div class="indicator-fill" id="rsiFill"></div>
+                        </div>
+                    </div>
+                    <div class="indicator-card">
+                        <div class="indicator-label">MACD</div>
+                        <div class="indicator-value" id="macdValue">-</div>
+                        <div class="indicator-signal" id="macdSignal">-</div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ===== LATEST NEWS ===== -->
+            <section class="card">
+                <h3>📰 Latest News</h3>
+                <div class="news-container" id="newsContainer">
+                    <p>Loading news...</p>
+                </div>
+            </section>
+
+            <!-- ===== RISK ASSESSMENT ===== -->
+            <section class="card">
+                <h3>⚠️ Risk Factors</h3>
+                <div class="risk-list" id="riskList">
+                    <p>Analyzing risk factors...</p>
+                </div>
+            </section>
+
+            <!-- ===== AI INSIGHT ===== -->
+            <section class="card ai-insight">
+                <h3>🤖 AI Investment Insight</h3>
+                <div class="ai-content">
+                    <p id="aiInsight">
+                        Based on fundamental analysis and technical indicators, this stock shows <strong>moderate growth potential</strong>. 
+                        Consider your risk tolerance and investment horizon before making decisions.
+                    </p>
+                    <div class="ai-disclaimer">
+                        ⚠️ <strong>Disclaimer:</strong> This analysis is for informational purposes only and should not be considered as financial advice. 
+                        Always consult with a qualified financial advisor before making investment decisions.
+                    </div>
+                </div>
+            </section>
+
+        </div>
+
+        <!-- Welcome Message (Initial State) -->
+        <div id="welcomeMessage" class="welcome-box">
+            <h2>👋 Welcome to Stock Analyzer</h2>
+            <p>Search for any stock symbol to get detailed financial analysis, technical indicators, and the latest news.</p>
+            <div class="example-stocks">
+                <button onclick="searchStockDirect('AAPL')">AAPL</button>
+                <button onclick="searchStockDirect('TSLA')">TSLA</button>
+                <button onclick="searchStockDirect('MSFT')">MSFT</button>
+                <button onclick="searchStockDirect('GOOGL')">GOOGL</button>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- ===== FOOTER ===== -->
+    <footer class="footer">
+        <p>📊 Stock Analyzer © 2025 | Data powered by Finnhub & Alpha Vantage | Not Financial Advice</p>
+    </footer>
+
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>
